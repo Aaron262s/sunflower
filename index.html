@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>送你太陽花花 🌻</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: linear-gradient(to bottom, #90e0ef, #fcf300 150%);
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+        }
+        
+        .card {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.75);
+            padding: 30px 50px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            z-index: 10;
+            border: 2px solid #fff;
+            animation: float 4s ease-in-out infinite;
+        }
+        h1 {
+            color: #d4a373;
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            letter-spacing: 2px;
+        }
+        p {
+            color: #6c584c;
+            font-size: 1.2rem;
+            line-height: 1.6;
+        }
+
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none; 
+        }
+
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h1>點擊任意地方，可以種更多太陽花🌻</h1>
+    </div>
+
+    <canvas id="sunflowerCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('sunflowerCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let width = canvas.width = window.innerWidth;
+        let height = canvas.height = window.innerHeight;
+
+        window.addEventListener('resize', () => {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        });
+
+        let mouse = { x: width / 2, y: height / 2 };
+        window.addEventListener('mousemove', (e) => {
+            mouse.x = e.clientX;
+        });
+
+        class Sunflower {
+            constructor(x, y, size) {
+                this.x = x;
+                this.y = y;
+                this.targetSize = size;
+                this.size = 0; 
+                this.angle = Math.random() * Math.PI;
+                this.swaySpeed = 0.005 + Math.random() * 0.005;
+                this.swayOffset = Math.random() * 100;
+                this.growthSpeed = 0.5 + Math.random() * 0.5;
+            }
+
+            draw() {
+                if (this.size < this.targetSize) {
+                    this.size += this.growthSpeed;
+                }
+
+                const baseSway = Math.sin(Date.now() * this.swaySpeed + this.swayOffset) * 5;
+                const mouseInfluence = (mouse.x - this.x) * 0.03; 
+                const totalSway = baseSway + mouseInfluence;
+
+                ctx.save();
+                ctx.translate(this.x + totalSway, this.y);
+
+
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.quadraticCurveTo(-totalSway * 0.5, (height - this.y) * 0.5, -totalSway, height - this.y);
+                ctx.strokeStyle = '#2d6a4f';
+                ctx.lineWidth = this.size * 0.12;
+                ctx.lineCap = 'round';
+                ctx.stroke();
+
+
+                ctx.fillStyle = '#40916c';
+                ctx.beginPath();
+                ctx.ellipse(-10, (height - this.y) * 0.3, this.size * 0.3, this.size * 0.15, Math.PI / 6, 0, Math.PI * 2);
+                ctx.ellipse(10, (height - this.y) * 0.5, this.size * 0.3, this.size * 0.15, -Math.PI / 6, 0, Math.PI * 2);
+                ctx.fill();
+
+
+                const petalCount = 24;
+                ctx.fillStyle = '#ffb703';
+                for (let i = 0; i < petalCount; i++) {
+                    ctx.rotate((Math.PI * 2) / petalCount);
+                    
+
+                    ctx.fillStyle = '#ffb703';
+                    ctx.beginPath();
+                    ctx.ellipse(0, this.size * 0.7, this.size * 0.2, this.size * 0.6, 0, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    ctx.fillStyle = '#fb8500';
+                    ctx.beginPath();
+                    ctx.ellipse(0, this.size * 0.5, this.size * 0.15, this.size * 0.4, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+
+                ctx.beginPath();
+                ctx.arc(0, 0, this.size * 0.45, 0, Math.PI * 2);
+                ctx.fillStyle = '#4e3526';
+                ctx.fill();
+
+                ctx.beginPath();
+                ctx.arc(0, 0, this.size * 0.45, 0, Math.PI * 2);
+                ctx.strokeStyle = '#ffb703';
+                ctx.lineWidth = 2;
+                ctx.setLineDash([4, 4]);
+                ctx.stroke();
+
+                ctx.restore();
+            }
+        }
+
+
+        const sunflowers = [];
+        const spacing = 100;
+        for (let x = 50; x < width; x += spacing + Math.random() * 40) {
+            const size = 35 + Math.random() * 25;
+            const y = height - size - (Math.random() * 100);
+            sunflowers.push(new Sunflower(x, y, size));
+        }
+
+
+        window.addEventListener('click', (e) => {
+            const size = 40 + Math.random() * 30;
+
+            sunflowers.push(new Sunflower(e.clientX, e.clientY, size));
+        });
+
+
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+            
+
+            sunflowers.sort((a, b) => a.y - b.y);
+            
+            sunflowers.forEach(flower => flower.draw());
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+    </script>
+</body>
+</html>
